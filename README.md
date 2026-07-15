@@ -1,4 +1,4 @@
-# @aquivalabs/review-harness
+# bladeforge-review-harness
 
 Stack-agnostic pre-push **review gate** harness — the deterministic core behind the `/review`
 framework. Ships two CLIs plus a small programmatic API. No runtime dependencies (Node builtins only).
@@ -19,7 +19,7 @@ Both run relative to the current working directory, so they read the *consuming*
 ## Install
 
 ```bash
-npm i -D @aquivalabs/review-harness
+npm i -D bladeforge-review-harness
 ```
 
 `.husky/pre-push`:
@@ -37,7 +37,7 @@ npx review-gate --secrets-only --base origin/main
 ## Programmatic API
 
 ```ts
-import { evaluateGate, computeReviewHash, scanForSecrets, loadConfig } from '@aquivalabs/review-harness';
+import { evaluateGate, computeReviewHash, scanForSecrets, loadConfig } from 'bladeforge-review-harness';
 ```
 
 Exposes the config loader, diff-hashing, secret scan, doc-pairing, and the pure gate decision for
