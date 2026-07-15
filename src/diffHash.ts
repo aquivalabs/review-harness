@@ -29,9 +29,14 @@ export const resolveBase = (): string => {
   }
 };
 
-/** Raw cumulative diff from `base..HEAD`. */
+/** Raw cumulative diff from `base..HEAD`. `maxBuffer` is raised well above the 1 MB default so a
+ * large cumulative diff (e.g. a long-lived branch far ahead of its base) does not crash with
+ * ENOBUFS. */
 export const getCumulativeDiff = (base: string): string => {
-  return execFileSync('git', ['diff', `${base}..HEAD`], { encoding: 'utf8' });
+  return execFileSync('git', ['diff', `${base}..HEAD`], {
+    encoding: 'utf8',
+    maxBuffer: 512 * 1024 * 1024,
+  });
 };
 
 /** HEAD commit SHA — the last commit the review (and its attestation) covers. Recorded in the
