@@ -4,6 +4,10 @@
   "description": "Stack-agnostic pre-push review gate harness: diff hashing, PASS attestation, secret scan, config + doc-pairing. Drives the /review framework's gate.",
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aquivalabs/review-harness.git"
+  },
   "publishConfig": {
     "access": "public"
   },
