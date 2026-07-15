@@ -1,6 +1,6 @@
 {
   "name": "bladeforge-review-harness",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Stack-agnostic pre-push review gate harness: diff hashing, PASS attestation, secret scan, config + doc-pairing. Drives the /review framework's gate.",
   "type": "module",
   "license": "MIT",

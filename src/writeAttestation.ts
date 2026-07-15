@@ -1,4 +1,4 @@
-import { computeReviewHash } from './diffHash';
+import { computeReviewHash, resolveHeadSha } from './diffHash';
 import { writeAttestation, type Attestation, type AgentResult } from './attestation';
 
 /** All agents must PASS for the set to pass. An empty set is FAIL (nothing was reviewed). */
@@ -11,13 +11,17 @@ export const deriveOverall = (perAgent: Record<string, AgentResult>): 'PASS' | '
  * current diff hash + HEAD commitSha, writes `.review/attestation.json`. */
 export const cli = (): void => {
   const perAgent = JSON.parse(process.argv[2] ?? '{}') as Record<string, AgentResult>;
+  const commitSha = resolveHeadSha();
   const attestation: Attestation = {
     diffHash: computeReviewHash(),
+    commitSha,
     perAgent,
     overall: deriveOverall(perAgent),
     timestamp: new Date().toISOString(),
   };
   writeAttestation(attestation);
-  console.log(`Wrote attestation: ${attestation.overall} (${attestation.diffHash.slice(0, 12)})`);
+  console.log(
+    `Wrote attestation: ${attestation.overall} (${attestation.diffHash.slice(0, 12)} @ ${commitSha.slice(0, 12)})`,
+  );
 };
 
