@@ -1,0 +1,35 @@
+name: publish
+
+# Publish to npm when package.json's version is new. Pushing without a version bump is a safe no-op
+# (the guard skips an already-published version). Auth is tokenless via npm Trusted Publishing (OIDC) —
+# no NPM_TOKEN secret; npm trusts this workflow. Requires the trusted publisher to be configured on
+# npmjs (Publisher: GitHub Actions, org aquivalabs, repo review-harness, workflow publish.yml).
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  id-token: write # required for OIDC trusted publishing + provenance
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - run: npm install -g npm@latest # OIDC trusted publishing needs npm >= 11.5
+      - run: npm ci
+      - run: npm test
+      - name: Publish if the version is new
+        run: |
+          NAME="$(node -p "require('./package.json').name")"
+          VERSION="$(node -p "require('./package.json').version")"
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "$NAME@$VERSION already published — skipping."
+          else
+            npm publish --provenance --access public
+          fi
