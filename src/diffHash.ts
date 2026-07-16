@@ -39,13 +39,6 @@ export const getCumulativeDiff = (base: string): string => {
   });
 };
 
-/** HEAD commit SHA — the last commit the review (and its attestation) covers. Recorded in the
- * attestation as a pointer + the anchor for the next incremental review (`git diff <sha>..HEAD` =
- * what changed since). Not the gate's validity key — that stays the content-based diffHash. */
-export const resolveHeadSha = (): string => {
-  return execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
-};
-
 export const computeReviewHash = (): string => {
   return hashDiff(getCumulativeDiff(resolveBase()));
 };

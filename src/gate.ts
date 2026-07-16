@@ -1,5 +1,5 @@
 import { hashDiff, getCumulativeDiff, resolveBase } from './diffHash';
-import { readAttestation, isAttestationValid, type Attestation } from './attestation';
+import { readAttestationFor, isAttestationValid, listAttestedHashes, type Attestation } from './attestation';
 import { scanForSecrets, type SecretFinding } from './secretScan';
 import { loadConfig } from './config';
 
@@ -45,7 +45,7 @@ export const runGate = (): GateResult => {
   // Hash the SAME diff we scanned (honors --base) so the hash and the attestation always
   // agree on the base — no second, divergent base resolution.
   const hash = hashDiff(diff);
-  return evaluateGate({ hash, attestation: readAttestation(), diff, secretAllowlist });
+  return evaluateGate({ hash, attestation: readAttestationFor(hash), diff, secretAllowlist });
 };
 
 const printReport = (result: GateResult): void => {
@@ -58,11 +58,12 @@ const printReport = (result: GateResult): void => {
 
   if (!result.attestationOk) {
     console.error(`  ${step}) Review not passed for THIS change set.`);
-    console.error('     No `.review/attestation.json` matching the current diff was found');
+    console.error('     No `.review/attestations/<diffHash>.json` matching the current diff was found');
     console.error('     (missing, or stale because the diff changed since the last review).');
-    const stale = readAttestation();
-    if (stale?.commitSha) {
-      console.error(`     Last review covered commit ${stale.commitSha.slice(0, 12)}; the diff has changed since.`);
+    const onFile = listAttestedHashes();
+    if (onFile.length > 0) {
+      const covered = onFile.map((h) => h.slice(0, 12)).join(', ');
+      console.error(`     On file: attestation(s) for diff ${covered}; the current diff has changed since.`);
     }
     console.error('     → Run  /review  in Claude Code. On all-pass it writes the attestation;');
     console.error('       then push again.');
