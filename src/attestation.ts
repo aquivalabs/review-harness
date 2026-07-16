@@ -8,21 +8,23 @@ export interface AgentResult {
   verdict: Verdict;
 }
 
-/**
- * The committed attestation is a pure function of the diff: NO per-run fields (timestamp,
- * commitSha, numeric scores). The same reviewed diff therefore produces byte-identical content on
- * any branch, so the content-addressed files never collide on a merge — two branches either add
- * files with different names (different diffs) or add the identical file (same diff).
- */
 export interface Attestation {
   diffHash: string;
+  /** HEAD SHA the review covered — the anchor for the next incremental review
+   * (`git diff <commitSha>..HEAD` = what changed since). Optional for backward compatibility. */
+  commitSha?: string;
+  perAgent: Record<string, AgentResult>;
   overall: Verdict;
-  /** Per-agent verdicts (verdict-only, so the content stays deterministic). An agent absent here
-   * was not dispatched (no changed file in its zone). */
-  agents: Record<string, Verdict>;
+  timestamp: string;
 }
 
-/** Content-addressed store: one file per reviewed diff, named by its hash. */
+/**
+ * Content-addressed store: one file per reviewed diff, named by its hash. Different diffs land in
+ * different files, so two branches never touch the same file on a merge — the store never conflicts.
+ * The file CONTENT still carries commitSha/perAgent/timestamp (the incremental-review anchor and the
+ * carry-forward verdicts need them); only the same-diff-on-two-branches edge could differ, and that
+ * is rare and harmless.
+ */
 export const ATTESTATIONS_DIR = '.review/attestations';
 /** Legacy single-slot path (pre content-addressed). Read as a fallback during migration only. */
 export const LEGACY_ATTESTATION_PATH = '.review/attestation.json';

@@ -14,7 +14,7 @@ describe('evaluateGate', () => {
   it('fails when a secret is present even with a valid attestation', () => {
     const result = evaluateGate({
       hash: 'abc',
-      attestation: { diffHash: 'abc', overall: 'PASS', agents: {} },
+      attestation: { diffHash: 'abc', perAgent: {}, overall: 'PASS', timestamp: 't' },
       diff: `+const key = "${awsKey}";`,
     });
     expect(result.ok).toBe(false);
@@ -25,7 +25,7 @@ describe('evaluateGate', () => {
   it('passes with a valid attestation and no secrets', () => {
     const result = evaluateGate({
       hash: 'abc',
-      attestation: { diffHash: 'abc', overall: 'PASS', agents: {} },
+      attestation: { diffHash: 'abc', perAgent: {}, overall: 'PASS', timestamp: 't' },
       diff: '+const value = 1;',
     });
     expect(result.ok).toBe(true);
