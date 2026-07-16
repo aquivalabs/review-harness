@@ -25,7 +25,7 @@ describe('smoke', () => {
 
   it('gate blocks when a secret is present even with a valid attestation', () => {
     const hash = 'abc';
-    const attestation = { diffHash: hash, overall: 'PASS' as const, agents: {} };
+    const attestation = { diffHash: hash, perAgent: {}, overall: 'PASS' as const, timestamp: 't' };
     expect(evaluateGate({ hash, attestation, diff: planted }).ok).toBe(false);
   });
 
