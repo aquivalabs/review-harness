@@ -30,4 +30,18 @@ describe('loadConfig', () => {
     expect(security?.enabled).toBe(true);
     expect(cfg.agents).toHaveLength(5);
   });
+
+  it('the craft lens replaced conventions', () => {
+    const names = DEFAULT_CONFIG.agents.map((agent) => agent.name);
+    expect(names).toContain('craft');
+    expect(names).not.toContain('conventions');
+  });
+
+  it('no agent carries a zones key, in the defaults or in a loaded config', () => {
+    const dir = writeConfig({ agents: [{ name: 'craft', threshold: 8 }] });
+    const carriesZones = (agents: unknown[]): boolean =>
+      agents.some((agent) => 'zones' in (agent as Record<string, unknown>));
+    expect(carriesZones(DEFAULT_CONFIG.agents)).toBe(false);
+    expect(carriesZones(loadConfig(dir).agents)).toBe(false);
+  });
 });

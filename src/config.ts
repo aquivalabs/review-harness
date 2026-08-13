@@ -17,7 +17,6 @@ export interface AgentConfig {
   name: string;
   enabled: boolean;
   threshold: number;
-  zones: string[];
   skills: string[];
   rules: AgentRule[];
   pairedDocs: DocPairConfig[];
@@ -37,7 +36,6 @@ const agentDefault = (name: string, threshold: number): AgentConfig => ({
   name,
   enabled: true,
   threshold,
-  zones: ['**/*'],
   skills: [],
   rules: [],
   pairedDocs: [],
@@ -47,7 +45,7 @@ export const DEFAULT_CONFIG: ReviewConfig = {
   secretAllowlist: [],
   persona: 'twitch',
   agents: [
-    agentDefault('conventions', 7),
+    agentDefault('craft', 7),
     agentDefault('architecture', 8),
     agentDefault('tests', 7),
     agentDefault('docs', 8),
