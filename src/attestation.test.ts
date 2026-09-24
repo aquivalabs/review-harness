@@ -50,12 +50,28 @@ describe('content-addressed store', () => {
     expect(readAttestationFor('hash1', dir)).toEqual(att('hash1'));
   });
 
-  it('deletes stale siblings on write (self-prunes to one file)', () => {
+  it("prunes the branch's own earlier attestation on write", () => {
     writeAttestation(att('hash1'), dir);
     writeAttestation(att('hash2'), dir);
     expect(readdirSync(dir)).toEqual(['hash2.json']);
     expect(readAttestationFor('hash1', dir)).toBeNull();
     expect(readAttestationFor('hash2', dir)).toEqual(att('hash2'));
+  });
+
+  it('keeps every attestation the base tracks, so a branch never deletes one that main holds', () => {
+    // Setup: `hash1` is main's (the base tracks it); `hash2` is the branch's own earlier round.
+    writeAttestation(att('hash1'), dir);
+    writeAttestation(att('hash2'), dir, ['hash1.json']);
+    // Exercise: a new round on the branch, with main's file protected.
+    writeAttestation(att('hash3'), dir, ['hash1.json']);
+    // Verify: main's survives, the branch's own stale round is gone, the new one is there.
+    expect(readdirSync(dir).sort()).toEqual(['hash1.json', 'hash3.json']);
+    expect(readAttestationFor('hash2', dir)).toBeNull();
+  });
+
+  it('never deletes the file it is writing, even when protect names it too', () => {
+    writeAttestation(att('hash1'), dir, ['hash1.json']);
+    expect(readAttestationFor('hash1', dir)).toEqual(att('hash1'));
   });
 
   it('lists the hashes currently on file', () => {

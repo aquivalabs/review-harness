@@ -33,19 +33,27 @@ export const attestationPathFor = (diffHash: string, dir: string = ATTESTATIONS_
   join(dir, `${diffHash}.json`);
 
 /**
- * Write the attestation at its content-addressed path AND delete every sibling. On any branch only
- * the current diff's attestation survives, so the directory self-prunes to one file per branch tip;
- * a merge transiently holds one file per merged branch and the next review collapses it back to one.
+ * Write the attestation at its content-addressed path and prune the branch's OWN stale siblings:
+ * every file in the store except the one being written and the ones named in `protect`. The CLI
+ * passes the files the base ref already tracks, so a branch never deletes an attestation that
+ * `main` holds. Deleting it was the conflict: a delete on one side and an add on the other is what
+ * git's rename detection pairs into a rename/rename conflict on merge, with conflict markers written
+ * into the JSON — measured, every merge of main into a long-lived branch conflicted in `.review/`.
+ * The store therefore grows by one small file per merged branch; nothing reads it by listing.
  */
-export const writeAttestation = (attestation: Attestation, dir: string = ATTESTATIONS_DIR): void => {
+export const writeAttestation = (
+  attestation: Attestation,
+  dir: string = ATTESTATIONS_DIR,
+  protect: Iterable<string> = [],
+): void => {
   mkdirSync(dir, { recursive: true });
-  const keep = `${attestation.diffHash}.json`;
+  const keep = new Set<string>([`${attestation.diffHash}.json`, ...protect]);
   for (const entry of readdirSync(dir)) {
-    if (entry !== keep) {
+    if (!keep.has(entry)) {
       rmSync(join(dir, entry), { recursive: true, force: true });
     }
   }
-  writeFileSync(join(dir, keep), `${JSON.stringify(attestation, null, 2)}\n`);
+  writeFileSync(join(dir, `${attestation.diffHash}.json`), `${JSON.stringify(attestation, null, 2)}\n`);
 };
 
 const parse = (path: string): Attestation | null => {

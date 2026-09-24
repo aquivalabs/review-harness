@@ -7,11 +7,15 @@ framework. Ships two CLIs plus a small programmatic API. No runtime dependencies
 
 - **`review-gate`** — the pre-push gate. Resolves the base ref, hashes the cumulative diff
   (`base..HEAD`, excluding `.review/`), runs the deterministic secret scan, and verifies a passing
-  `.review/attestation.json` matches the current diff. Exits non-zero (with a readable report) when
-  the review has not passed for this exact change set. Wire it into `.husky/pre-push` and CI.
-- **`review-attest`** — writes `.review/attestation.json` after an all-pass review, stamping the
-  current `diffHash` and the `commitSha` (HEAD the review covered). Called by the `/review`
-  orchestrator on PASS.
+  `.review/attestations/<diffHash>.json` matches the current diff. Exits non-zero (with a readable
+  report) when the review has not passed for this exact change set. Wire it into `.husky/pre-push`
+  and CI.
+- **`review-attest`** — writes `.review/attestations/<diffHash>.json` after an all-pass review,
+  stamping the current `diffHash` and the `commitSha` (HEAD the review covered), and prunes only the
+  branch's OWN stale attestations: every file the base ref already tracks stays, so a branch never
+  deletes an attestation `main` holds — that delete-versus-add pair is what git turned into a
+  rename/rename conflict, with conflict markers inside the JSON, on every merge of main into a
+  long-lived branch. Called by the `/review` orchestrator on PASS.
 
 Both run relative to the current working directory, so they read the *consuming* repo's
 `.claude/review.config.json` and git state.
