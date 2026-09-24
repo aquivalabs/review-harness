@@ -49,3 +49,16 @@ export const resolveHeadSha = (): string => {
 export const computeReviewHash = (): string => {
   return hashDiff(getCumulativeDiff(resolveBase()));
 };
+
+/** Basenames of the files `ref` tracks under `dir` — the attestations a branch must never delete,
+ * because they are the base's, not its own. An unknown ref (no remote yet) protects nothing. */
+export const trackedFilesAt = (ref: string, dir: string): string[] => {
+  try {
+    return execFileSync('git', ['ls-tree', '--name-only', ref, '--', `${dir}/`], { encoding: 'utf8' })
+      .split('\n')
+      .filter(Boolean)
+      .map((path) => path.slice(path.lastIndexOf('/') + 1));
+  } catch {
+    return [];
+  }
+};
