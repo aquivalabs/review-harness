@@ -17,16 +17,26 @@ export const hashDiff = (diffText: string): string => {
   return createHash('sha256').update(stripReviewPaths(diffText)).digest('hex');
 };
 
-/** Base ref: upstream of the current branch, else `origin/main` (a remote ref that exists in
- * both local clones and CI checkouts — bare `main` often does not exist in CI). */
-export const resolveBase = (): string => {
-  try {
-    return execFileSync('git', ['rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{upstream}'], {
-      encoding: 'utf8',
-    }).trim();
-  } catch {
-    return 'origin/main';
+/** Base ref: the branch's upstream when it is another branch (a stacked branch tracking its parent),
+ * else the remote's default branch, else `origin/main` (a remote ref that exists in both local
+ * clones and CI checkouts — bare `main` often does not exist in CI). An upstream that is the
+ * branch's own remote copy is not a base: once `git push -u` set it, `base..HEAD` held only the
+ * commits since the last push, so the hash never matched an attestation of the whole change and
+ * every later push was refused (RMA-399). */
+export const resolveBase = (cwd?: string): string => {
+  const git = (...args: string[]): string | null => {
+    try {
+      return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim() || null;
+    } catch {
+      return null;
+    }
+  };
+  const upstream = git('rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{upstream}');
+  const branch = git('rev-parse', '--abbrev-ref', 'HEAD');
+  if (upstream && branch && upstream.slice(upstream.indexOf('/') + 1) !== branch) {
+    return upstream;
   }
+  return git('symbolic-ref', '--short', 'refs/remotes/origin/HEAD') ?? 'origin/main';
 };
 
 /** Raw cumulative diff from `base..HEAD`. `maxBuffer` is raised well above the 1 MB default so a

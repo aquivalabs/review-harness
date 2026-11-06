@@ -5,7 +5,8 @@ framework. Ships two CLIs plus a small programmatic API. No runtime dependencies
 
 ## What it does
 
-- **`review-gate`** — the pre-push gate. Resolves the base ref, hashes the cumulative diff
+- **`review-gate`** — the pre-push gate. Resolves the base ref (the branch's upstream when that is
+  another branch, else the remote's default branch, never the branch's own remote copy), hashes the cumulative diff
   (`base..HEAD`, excluding `.review/`), runs the deterministic secret scan, and verifies a passing
   `.review/attestations/<diffHash>.json` matches the current diff. Exits non-zero (with a readable
   report) when the review has not passed for this exact change set. Wire it into `.husky/pre-push`
